@@ -84,6 +84,10 @@ Python Code:
     
     return python_code
 
+# Initialize session state for examples
+if 'selected_example' not in st.session_state:
+    st.session_state.selected_example = ""
+
 # Main app
 st.markdown('<div class="main-header">🧠 Pseudocode to Python Converter</div>', unsafe_allow_html=True)
 st.markdown("Convert your pseudocode into executable Python code using AI!")
@@ -92,14 +96,38 @@ st.markdown("Convert your pseudocode into executable Python code using AI!")
 tokenizer, model = load_model()
 
 if tokenizer and model:
+    # Examples in sidebar
+    with st.sidebar:
+        st.header("📚 Examples")
+        examples = {
+            "Simple Variable": "x = 5\nprint x",
+            "For Loop": "FOR i FROM 1 TO 5\n    PRINT i\nENDFOR", 
+            "Conditional": "IF score > 50 THEN\n    PRINT 'Pass'\nELSE\n    PRINT 'Fail'\nENDIF",
+            "Array Sum": "numbers = [1, 2, 3, 4, 5]\nsum = 0\nFOR i FROM 0 TO 4\n    sum = sum + numbers[i]\nENDFOR\nprint sum"
+        }
+        
+        # Use radio buttons instead of session state modification
+        selected_example = st.radio(
+            "Choose an example:",
+            options=list(examples.keys()),
+            key="example_selector"
+        )
+        
+        # Set the selected example
+        if selected_example:
+            st.session_state.selected_example = examples[selected_example]
+
     # Layout
     col1, col2 = st.columns([1, 1])
     
     with col1:
         st.subheader("📝 Input Pseudocode")
+        
+        # Use the selected example as default value
         pseudocode = st.text_area(
             "Enter your pseudocode:",
             height=200,
+            value=st.session_state.selected_example,
             placeholder="""FOR i FROM 1 TO 5
     PRINT i
 ENDFOR""",
@@ -130,21 +158,6 @@ ENDFOR""",
                         st.error(f"❌ Conversion failed: {e}")
             else:
                 st.warning("⚠️ Please enter some pseudocode first!")
-    
-    # Examples in sidebar
-    with st.sidebar:
-        st.header("📚 Examples")
-        examples = {
-            "Simple Variable": "x = 5\nprint x",
-            "For Loop": "FOR i FROM 1 TO 5\n    PRINT i\nENDFOR", 
-            "Conditional": "IF score > 50 THEN\n    PRINT 'Pass'\nELSE\n    PRINT 'Fail'\nENDIF",
-            "Array Sum": "numbers = [1, 2, 3, 4, 5]\nsum = 0\nFOR i FROM 0 TO 4\n    sum = sum + numbers[i]\nENDFOR\nprint sum"
-        }
-        
-        for name, code in examples.items():
-            if st.button(f"📋 {name}", use_container_width=True):
-                st.session_state.pseudocode_input = code
-                st.rerun()
 
 else:
     st.error("❌ Failed to load the model. Please try refreshing the page.")
